@@ -58,7 +58,13 @@ function uploadBufferToQiniu(buffer: Buffer, key: string) {
 async function fetchDatabase() {
   const url = `${QINIU_DOMAIN}/${DB_FILE_KEY}?t=${Date.now()}`;
   try {
-    const response = await axios.get(url);
+    const response = await axios.get(url, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
+    });
     return Array.isArray(response.data) ? response.data : [];
   } catch (error: any) {
     if (error.response && error.response.status === 404) {
