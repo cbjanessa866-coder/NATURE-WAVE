@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, Send } from 'lucide-react';
 import React, { useState } from 'react';
 import type { FormEvent } from 'react';
+import * as qiniu from 'qiniu-js';
 
 interface SubmissionModalProps {
   isOpen: boolean;
@@ -32,30 +33,68 @@ export default function SubmissionModal({ isOpen, onClose }: SubmissionModalProp
     setUploadError('');
 
     try {
-      let fileUrl = '';
-      if (file) {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('name', formState.name);
-        formData.append('email', formState.email);
-        formData.append('category', formState.category);
-        formData.append('description', formState.description);
-
-        const response = await fetch('/api/submissions', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Upload failed');
-        }
-
-        const data = await response.json();
-        console.log('Submission success:', data);
-      } else {
+      if (!file) {
         throw new Error('请选择文件');
       }
+
+      // 1. Get Upload Token
+      const tokenRes = await fetch('/api/upload-token');
+      if (!tokenRes.ok) throw new Error('Failed to get upload token');
+      const { token } = await tokenRes.json();
+
+      // 2. Upload to Qiniu
+      const key = `submissions/${Date.now()}-${Math.random().toString(36).substring(2, 8)}${file.name.substring(file.name.lastIndexOf('.'))}`;
+      const putExtra = {
+        fname: file.name,
+        params: {},
+        mimeType: undefined
+      };
+      const config = {
+        useCdnDomain: true,
+        region: qiniu.region.z2 // South China (hn-bkt)
+      };
+
+      const observable = qiniu.upload(file, key, token, putExtra, config);
+
+      await new Promise((resolve, reject) => {
+        observable.subscribe({
+          next: (res) => {
+            // console.log('Progress:', res.total.percent);
+          },
+          error: (err) => {
+            reject(err);
+          },
+          complete: (res) => {
+            resolve(res);
+          }
+        });
+      });
+
+      const fileUrl = `http://taws5nht0.hn-bkt.clouddn.com/${key}`;
+
+      // 3. Submit Metadata to Backend
+      const response = await fetch('/api/submissions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formState.name,
+          email: formState.email,
+          category: formState.category,
+          description: formState.description,
+          file_url: fileUrl,
+          file_name: key
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Submission failed');
+      }
+
+      const data = await response.json();
+      console.log('Submission success:', data);
       
       setIsSuccess(true);
       setTimeout(() => {

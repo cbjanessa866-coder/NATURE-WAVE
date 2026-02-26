@@ -90,28 +90,13 @@ app.get('/api/health', (req, res) => {
 });
 
 // Submission Endpoint (Upload + JSON DB Update)
-app.post('/api/submissions', upload.single('file'), async (req, res) => {
+app.post('/api/submissions', upload.none(), async (req, res) => {
   try {
-    const file = req.file;
-    const { name, email, category, description } = req.body;
+    const { name, email, category, description, file_url, file_name } = req.body;
 
-    if (!file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-    if (!name || !email || !category) {
+    if (!name || !email || !category || !file_url || !file_name) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
-
-    // 1. Upload File to Qiniu
-    const timestamp = Date.now();
-    const randomString = Math.random().toString(36).substring(2, 8);
-    const extension = path.extname(file.originalname);
-    const key = `submissions/${timestamp}-${randomString}${extension}`;
-    
-    await uploadBufferToQiniu(file.buffer, key);
-    
-    const cleanDomain = QINIU_DOMAIN.replace(/\/$/, '');
-    const url = `${cleanDomain}/${key}`;
 
     // 2. Update JSON Database on Qiniu
     const submissions = await fetchDatabase();
@@ -122,8 +107,8 @@ app.post('/api/submissions', upload.single('file'), async (req, res) => {
       email,
       category,
       description: description || '',
-      file_url: url,
-      file_name: key,
+      file_url,
+      file_name,
       status: 'pending',
       created_at: new Date().toISOString()
     };
@@ -134,12 +119,23 @@ app.post('/api/submissions', upload.single('file'), async (req, res) => {
     res.json({ 
       success: true,
       id: newSubmission.id,
-      url: url
+      url: file_url
     });
 
   } catch (error: any) {
     console.error('Submission Error:', error);
     res.status(500).json({ error: 'Failed to process submission', details: error.message });
+  }
+});
+
+// Get Qiniu Upload Token
+app.get('/api/upload-token', (req, res) => {
+  try {
+    const token = getUploadToken();
+    res.json({ token });
+  } catch (error: any) {
+    console.error('Token Error:', error);
+    res.status(500).json({ error: 'Failed to generate upload token' });
   }
 });
 
