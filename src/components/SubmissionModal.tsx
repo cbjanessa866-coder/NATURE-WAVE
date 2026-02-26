@@ -51,7 +51,7 @@ export default function SubmissionModal({ isOpen, onClose }: SubmissionModalProp
       };
       const config = {
         useCdnDomain: true,
-        region: qiniu.region.as0 // Southeast Asia (up-as0.qiniup.com)
+        // region: null // Let qiniu-js auto-detect region based on bucket
       };
 
       const observable = qiniu.upload(file, key, token, putExtra, config);
