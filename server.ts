@@ -1,3 +1,4 @@
+import 'dotenv/config'; // Ensure env vars are loaded first
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';

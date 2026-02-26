@@ -1,3 +1,4 @@
+import 'dotenv/config'; // Load environment variables
 import express from 'express';
 import multer from 'multer';
 import qiniu from 'qiniu';
@@ -24,10 +25,18 @@ const QINIU_DOMAIN = process.env.QINIU_DOMAIN || 'http://taws5nht0.hn-bkt.cloudd
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
+console.log('[API] Supabase Config:', {
+  url: SUPABASE_URL ? `${SUPABASE_URL.substring(0, 15)}...` : 'MISSING',
+  key: SUPABASE_KEY ? 'PRESENT' : 'MISSING'
+});
+
 // Create Supabase Client
 // Note: If env vars are missing, this will throw an error on first use, which is expected.
 const supabase = (SUPABASE_URL && SUPABASE_KEY) 
-  ? createClient(SUPABASE_URL, SUPABASE_KEY) 
+  ? createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: false },
+    db: { schema: 'public' }
+  }) 
   : null;
 
 // Helper: Get Qiniu Upload Token
@@ -53,12 +62,18 @@ app.get('/api/health', (req, res) => {
 });
 
 // Submission Endpoint (Save Metadata to Supabase)
-app.post('/api/submissions', upload.none(), async (req, res) => {
+app.post('/api/submissions', async (req, res) => {
   console.log('[API] POST /api/submissions');
   try {
     if (!supabase) {
-      console.error('[API] Supabase not configured');
-      return res.status(500).json({ error: 'Database not configured' });
+      const missing = [];
+      if (!process.env.SUPABASE_URL) missing.push('SUPABASE_URL');
+      if (!process.env.SUPABASE_KEY) missing.push('SUPABASE_KEY');
+      console.error('[API] Supabase not configured. Missing:', missing);
+      return res.status(500).json({ 
+        error: 'Database not configured', 
+        details: `Missing environment variables: ${missing.join(', ')}`
+      });
     }
     // ...
 
@@ -118,8 +133,14 @@ app.get('/api/submissions', async (req, res) => {
   console.log('[API] GET /api/submissions');
   try {
     if (!supabase) {
-      console.error('[API] Supabase not configured');
-      return res.status(500).json({ error: 'Database not configured' });
+      const missing = [];
+      if (!process.env.SUPABASE_URL) missing.push('SUPABASE_URL');
+      if (!process.env.SUPABASE_KEY) missing.push('SUPABASE_KEY');
+      console.error('[API] Supabase not configured. Missing:', missing);
+      return res.status(500).json({ 
+        error: 'Database not configured', 
+        details: `Missing environment variables: ${missing.join(', ')}`
+      });
     }
 
     const { data, error } = await supabase
@@ -136,7 +157,11 @@ app.get('/api/submissions', async (req, res) => {
     res.json(data);
   } catch (error: any) {
     console.error('Database Error:', error);
-    res.status(500).json({ error: 'Failed to fetch submissions' });
+    res.status(500).json({ 
+      error: 'Failed to fetch submissions', 
+      details: error.message || JSON.stringify(error),
+      hint: error.hint || 'Check if the table exists and RLS policies are configured.'
+    });
   }
 });
 
