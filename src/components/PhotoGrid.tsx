@@ -1,43 +1,9 @@
 import { motion } from 'motion/react';
-
-const photos = [
-  {
-    id: 1,
-    title: "山谷回响 (Echoes of the Valley)",
-    photographer: "陈莎拉",
-    category: "风光摄影",
-    image: "https://picsum.photos/seed/valley/800/600",
-    description: "捕捉东方被遗忘山谷的静谧光影。"
-  },
-  {
-    id: 2,
-    title: "霓虹潮汐 (Neon Tide)",
-    photographer: "马库斯·索恩",
-    category: "城市建筑",
-    image: "https://picsum.photos/seed/neon/800/1000",
-    description: "当海洋发光时，城市沉睡。赛博朋克风格的城市夜景。"
-  },
-  {
-    id: 3,
-    title: "根 (Roots)",
-    photographer: "埃琳娜·罗德里格斯",
-    category: "人文纪实",
-    image: "https://picsum.photos/seed/roots/800/600",
-    description: "古老橡树下，记录家族与土地的深厚羁绊。"
-  },
-  {
-    id: 4,
-    title: "最后的故障 (The Last Glitch)",
-    photographer: "佐藤健二",
-    category: "观念摄影",
-    image: "https://picsum.photos/seed/glitch/800/800",
-    description: "数字噪点与现实影像的抽象拼贴。"
-  }
-];
+import { EXHIBITION_PHOTOS } from '../constants';
 
 export default function PhotoGrid() {
   // Duplicate photos to create a seamless loop
-  const allPhotos = [...photos, ...photos, ...photos, ...photos];
+  const allPhotos = [...EXHIBITION_PHOTOS, ...EXHIBITION_PHOTOS, ...EXHIBITION_PHOTOS, ...EXHIBITION_PHOTOS];
 
   return (
     <section id="works" className="py-32 bg-black overflow-hidden">

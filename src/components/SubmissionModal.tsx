@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, Send } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import type { FormEvent } from 'react';
 
 interface SubmissionModalProps {
@@ -13,19 +13,50 @@ export default function SubmissionModal({ isOpen, onClose }: SubmissionModalProp
     name: '',
     email: '',
     category: '风光摄影',
-    portfolioUrl: '',
     description: ''
   });
+  const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setUploadError('');
+
+    try {
+      let fileUrl = '';
+      if (file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('name', formState.name);
+        formData.append('email', formState.email);
+        formData.append('category', formState.category);
+        formData.append('description', formState.description);
+
+        const response = await fetch('/api/submissions', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Upload failed');
+        }
+
+        const data = await response.json();
+        console.log('Submission success:', data);
+      } else {
+        throw new Error('请选择文件');
+      }
+      
       setIsSuccess(true);
       setTimeout(() => {
         setIsSuccess(false);
@@ -34,11 +65,16 @@ export default function SubmissionModal({ isOpen, onClose }: SubmissionModalProp
           name: '',
           email: '',
           category: '风光摄影',
-          portfolioUrl: '',
           description: ''
         });
+        setFile(null);
       }, 2000);
-    }, 1500);
+    } catch (error: any) {
+      console.error('Submission error:', error);
+      setUploadError(error.message || '提交失败，请重试');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -125,18 +161,17 @@ export default function SubmissionModal({ isOpen, onClose }: SubmissionModalProp
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-1">作品集链接 (Google Drive/Dropbox/个人网站)</label>
+                      <label className="block text-sm font-medium text-gray-400 mb-1">上传作品 (图片/PDF)</label>
                       <div className="relative">
-                        <Upload className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
                         <input
-                          type="url"
+                          type="file"
                           required
-                          value={formState.portfolioUrl}
-                          onChange={(e) => setFormState({ ...formState, portfolioUrl: e.target.value })}
-                          className="w-full bg-neutral-800 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all"
-                          placeholder="https://..."
+                          accept="image/*,.pdf"
+                          onChange={handleFileChange}
+                          className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-500 file:text-white hover:file:bg-orange-600"
                         />
                       </div>
+                      {uploadError && <p className="text-red-500 text-sm mt-1">{uploadError}</p>}
                     </div>
 
                     <div>

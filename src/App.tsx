@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import PhilosophySection from './components/PhilosophySection';
@@ -11,8 +12,9 @@ import Footer from './components/Footer';
 import SubmissionModal from './components/SubmissionModal';
 import SigningModal from './components/SigningModal';
 import MessageCenter from './components/MessageCenter';
+import AdminDashboard from './components/AdminDashboard';
 
-export default function App() {
+function HomePage() {
   const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
   const [isSigningOpen, setIsSigningOpen] = useState(false);
   const [isMessageCenterOpen, setIsMessageCenterOpen] = useState(false);
@@ -46,5 +48,16 @@ export default function App() {
         onClose={() => setIsMessageCenterOpen(false)}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

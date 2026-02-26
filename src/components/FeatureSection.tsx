@@ -1,37 +1,5 @@
 import { motion } from 'motion/react';
-
-const judges = [
-  {
-    name: "Sarah Chen",
-    role: "Visual Director",
-    image: "https://picsum.photos/seed/judge1/300/400",
-    description: "专注纪实摄影，前马格南图片社合作摄影师。"
-  },
-  {
-    name: "David Miller",
-    role: "Senior Curator",
-    image: "https://picsum.photos/seed/judge2/300/400",
-    description: "现代艺术博物馆资深策展人，拥有20年策展经验。"
-  },
-  {
-    name: "Elena Rossi",
-    role: "Fine Art Photographer",
-    image: "https://picsum.photos/seed/judge3/300/400",
-    description: "屡获殊荣的艺术摄影师，以抽象景观作品闻名。"
-  },
-  {
-    name: "Kenji Tanaka",
-    role: "Photojournalist",
-    image: "https://picsum.photos/seed/judge4/300/400",
-    description: "资深战地记者，曾为多家顶级刊物拍摄封面。"
-  },
-  {
-    name: "Maria Gonzalez",
-    role: "Fashion Photographer",
-    image: "https://picsum.photos/seed/judge5/300/400",
-    description: "VOGUE 常驻摄影师，定义当代时尚视觉语言。"
-  }
-];
+import { JUDGES, GALLERY_IMAGE } from '../constants';
 
 export default function FeatureSection() {
   return (
@@ -62,7 +30,7 @@ export default function FeatureSection() {
             className="flex-1 w-full"
           >
             <img 
-              src="https://picsum.photos/seed/gallery/800/600" 
+              src={GALLERY_IMAGE} 
               alt="Gallery Experience" 
               className="rounded-3xl shadow-2xl shadow-orange-900/10 w-full"
               referrerPolicy="no-referrer"
@@ -101,7 +69,7 @@ export default function FeatureSection() {
                   duration: 30 
                 }}
              >
-                {[...judges, ...judges].map((judge, index) => (
+                {[...JUDGES, ...JUDGES].map((judge, index) => (
                    <div
                       key={index}
                       className="w-72 bg-neutral-900/50 border border-white/5 rounded-2xl overflow-hidden flex-shrink-0 group hover:border-blue-500/30 transition-colors"

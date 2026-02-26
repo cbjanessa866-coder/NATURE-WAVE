@@ -98,10 +98,10 @@ export default function Footer({ onOpenSubmission }: FooterProps) {
     <>
       <footer className="bg-neutral-950 text-gray-400 py-12 text-xs border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 max-w-4xl mx-auto text-center">
             <div>
               <h4 className="text-white font-semibold mb-3">展览信息</h4>
-              <ul className="space-y-2">
+              <ul className="space-y-2 flex flex-col items-center">
                 <li className="text-gray-500">大连引庭艺术园区</li>
                 <li className="text-gray-500">无需购票，免费入场</li>
                 <li>
@@ -109,7 +109,7 @@ export default function Footer({ onOpenSubmission }: FooterProps) {
                     href="https://www.amap.com/search?query=大连引庭艺术园区" 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="hover:underline flex items-center gap-1"
+                    className="hover:underline flex items-center gap-1 justify-center"
                   >
                     交通指南
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -125,11 +125,11 @@ export default function Footer({ onOpenSubmission }: FooterProps) {
             </div>
             <div>
               <h4 className="text-white font-semibold mb-3">参与</h4>
-              <ul className="space-y-2">
+              <ul className="space-y-2 flex flex-col items-center">
                 <li>
                   <button 
                     onClick={onOpenSubmission} 
-                    className="hover:underline text-left"
+                    className="hover:underline"
                   >
                     作品投稿
                   </button>
@@ -137,7 +137,7 @@ export default function Footer({ onOpenSubmission }: FooterProps) {
                 <li>
                   <button 
                     onClick={() => openContactModal('志愿者招募')} 
-                    className="hover:underline text-left"
+                    className="hover:underline"
                   >
                     志愿者招募
                   </button>
@@ -145,7 +145,7 @@ export default function Footer({ onOpenSubmission }: FooterProps) {
                 <li>
                   <button 
                     onClick={() => openContactModal('赞助合作')} 
-                    className="hover:underline text-left"
+                    className="hover:underline"
                   >
                     赞助合作
                   </button>
@@ -154,11 +154,11 @@ export default function Footer({ onOpenSubmission }: FooterProps) {
             </div>
             <div>
               <h4 className="text-white font-semibold mb-3">法律条款</h4>
-              <ul className="space-y-2">
+              <ul className="space-y-2 flex flex-col items-center">
                 <li>
                   <button 
                     onClick={() => openLegalModal('隐私政策', LEGAL_CONTENT.privacy)}
-                    className="hover:underline text-left"
+                    className="hover:underline"
                   >
                     隐私政策
                   </button>
@@ -166,7 +166,7 @@ export default function Footer({ onOpenSubmission }: FooterProps) {
                 <li>
                   <button 
                     onClick={() => openLegalModal('使用条款', LEGAL_CONTENT.terms)}
-                    className="hover:underline text-left"
+                    className="hover:underline"
                   >
                     使用条款
                   </button>
@@ -174,25 +174,18 @@ export default function Footer({ onOpenSubmission }: FooterProps) {
                 <li>
                   <button 
                     onClick={() => openLegalModal('Cookie 政策', LEGAL_CONTENT.cookie)}
-                    className="hover:underline text-left"
+                    className="hover:underline"
                   >
                     Cookie 政策
                   </button>
                 </li>
               </ul>
             </div>
-            <div>
-              <h4 className="text-white font-semibold mb-3">关注我们</h4>
-              <ul className="space-y-2">
-                <li><a href="#" className="hover:underline">Instagram</a></li>
-                <li><a href="#" className="hover:underline">Twitter</a></li>
-                <li><a href="#" className="hover:underline">YouTube</a></li>
-              </ul>
-            </div>
           </div>
-          <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center">
+          <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-center items-center gap-4 text-center">
             <p>Copyright © 2026 NATURE WAVE. 保留所有权利。</p>
-            <p className="mt-2 md:mt-0">Designed with passion.</p>
+            <p className="hidden md:block text-white/20">|</p>
+            <p>Designed with passion.</p>
           </div>
         </div>
       </footer>

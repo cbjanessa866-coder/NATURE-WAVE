@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import { HERO_BACKGROUND_IMAGE } from '../constants';
 
 
 export default function Hero() {
@@ -7,7 +8,7 @@ export default function Hero() {
       {/* Background Video/Image Placeholder */}
       <div className="absolute inset-0 z-0">
         <img
-          src="https://picsum.photos/seed/naturewave/1920/1080?blur=2"
+          src={HERO_BACKGROUND_IMAGE}
           alt="Nature Wave Background"
           className="w-full h-full object-cover opacity-60"
           referrerPolicy="no-referrer"
