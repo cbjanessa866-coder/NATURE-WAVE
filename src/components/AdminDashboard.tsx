@@ -23,12 +23,30 @@ export default function AdminDashboard() {
 
   const fetchSubmissions = async () => {
     try {
-      const response = await fetch('/api/submissions');
-      if (!response.ok) throw new Error('Failed to fetch submissions');
+      // Set a 10s timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch('/api/submissions', {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Request failed with status ${response.status}`);
+      }
+      
       const data = await response.json();
       setSubmissions(data);
     } catch (err: any) {
-      setError(err.message);
+      console.error('Fetch error:', err);
+      if (err.name === 'AbortError') {
+        setError('Request timed out. Please check your network or server status.');
+      } else {
+        setError(err.message || 'Failed to load submissions');
+      }
     } finally {
       setLoading(false);
     }

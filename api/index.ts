@@ -45,6 +45,7 @@ app.use(express.json());
 
 // API Routes
 app.get('/api/health', (req, res) => {
+  console.log('[API] Health check');
   if (!supabase) {
     return res.status(500).json({ status: 'error', message: 'Supabase credentials missing' });
   }
@@ -53,10 +54,14 @@ app.get('/api/health', (req, res) => {
 
 // Submission Endpoint (Save Metadata to Supabase)
 app.post('/api/submissions', upload.none(), async (req, res) => {
+  console.log('[API] POST /api/submissions');
   try {
     if (!supabase) {
+      console.error('[API] Supabase not configured');
       return res.status(500).json({ error: 'Database not configured' });
     }
+    // ...
+
 
     const { name, email, category, description, file_url, file_name } = req.body;
 
@@ -110,8 +115,10 @@ app.get('/api/upload-token', (req, res) => {
 
 // Admin: List Submissions
 app.get('/api/submissions', async (req, res) => {
+  console.log('[API] GET /api/submissions');
   try {
     if (!supabase) {
+      console.error('[API] Supabase not configured');
       return res.status(500).json({ error: 'Database not configured' });
     }
 
@@ -121,9 +128,11 @@ app.get('/api/submissions', async (req, res) => {
       .order('created_at', { ascending: false });
 
     if (error) {
+      console.error('[API] Supabase error:', error);
       throw error;
     }
 
+    console.log(`[API] Fetched ${data?.length || 0} submissions`);
     res.json(data);
   } catch (error: any) {
     console.error('Database Error:', error);
