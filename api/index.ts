@@ -2,7 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import qiniu from 'qiniu';
 import path from 'path';
-import axios from 'axios';
+import { createClient } from '@supabase/supabase-js';
 
 const app = express();
 
@@ -19,7 +19,16 @@ const QINIU_ACCESS_KEY = process.env.QINIU_ACCESS_KEY || '1yN6DSDxKnT1e_77znNNo4
 const QINIU_SECRET_KEY = process.env.QINIU_SECRET_KEY || 'KSDc3jqQT5PKskvqHX4jjePeokgPuAY73L6AY7Yw';
 const QINIU_BUCKET = process.env.QINIU_BUCKET || 'nature-wave';
 const QINIU_DOMAIN = process.env.QINIU_DOMAIN || 'http://taws5nht0.hn-bkt.clouddn.com';
-const DB_FILE_KEY = 'database/submissions.json';
+
+// Supabase Configuration
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+
+// Create Supabase Client
+// Note: If env vars are missing, this will throw an error on first use, which is expected.
+const supabase = (SUPABASE_URL && SUPABASE_KEY) 
+  ? createClient(SUPABASE_URL, SUPABASE_KEY) 
+  : null;
 
 // Helper: Get Qiniu Upload Token
 function getUploadToken(key: string | null = null) {
@@ -32,99 +41,59 @@ function getUploadToken(key: string | null = null) {
   return putPolicy.uploadToken(mac);
 }
 
-// Helper: Upload Buffer to Qiniu
-function uploadBufferToQiniu(buffer: Buffer, key: string) {
-  return new Promise((resolve, reject) => {
-    const config = new qiniu.conf.Config();
-    const formUploader = new qiniu.form_up.FormUploader(config);
-    const putExtra = new qiniu.form_up.PutExtra();
-    const uploadToken = getUploadToken(key); // Use key for overwrite scope
-
-    formUploader.put(uploadToken, key, buffer, putExtra, (respErr, respBody, respInfo) => {
-      if (respErr) {
-        reject(respErr);
-        return;
-      }
-      if (respInfo.statusCode == 200) {
-        resolve(respBody);
-      } else {
-        reject(new Error(`Qiniu upload failed with status code ${respInfo.statusCode}`));
-      }
-    });
-  });
-}
-
-// Helper: Fetch DB (JSON) from Qiniu
-async function fetchDatabase() {
-  const url = `${QINIU_DOMAIN}/${DB_FILE_KEY}?t=${Date.now()}`;
-  try {
-    const response = await axios.get(url, {
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-      }
-    });
-    return Array.isArray(response.data) ? response.data : [];
-  } catch (error: any) {
-    if (error.response && error.response.status === 404) {
-      return []; // File doesn't exist yet, return empty array
-    }
-    console.error('Failed to fetch database:', error.message);
-    return []; // Return empty on error to avoid crash, though risky
-  }
-}
-
-// Helper: Save DB (JSON) to Qiniu
-async function saveDatabase(data: any[]) {
-  const jsonString = JSON.stringify(data, null, 2);
-  const buffer = Buffer.from(jsonString, 'utf-8');
-  await uploadBufferToQiniu(buffer, DB_FILE_KEY);
-}
-
 app.use(express.json());
 
 // API Routes
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', storage: 'qiniu-json' });
+  if (!supabase) {
+    return res.status(500).json({ status: 'error', message: 'Supabase credentials missing' });
+  }
+  res.json({ status: 'ok', storage: 'supabase' });
 });
 
-// Submission Endpoint (Upload + JSON DB Update)
+// Submission Endpoint (Save Metadata to Supabase)
 app.post('/api/submissions', upload.none(), async (req, res) => {
   try {
+    if (!supabase) {
+      return res.status(500).json({ error: 'Database not configured' });
+    }
+
     const { name, email, category, description, file_url, file_name } = req.body;
 
     if (!name || !email || !category || !file_url || !file_name) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // 2. Update JSON Database on Qiniu
-    const submissions = await fetchDatabase();
-    
-    const newSubmission = {
-      id: Date.now(), // Simple ID generation
-      name,
-      email,
-      category,
-      description: description || '',
-      file_url,
-      file_name,
-      status: 'pending',
-      created_at: new Date().toISOString()
-    };
+    // Insert into Supabase
+    const { data, error } = await supabase
+      .from('submissions')
+      .insert([
+        { 
+          name, 
+          email, 
+          category, 
+          description: description || '', 
+          file_url, 
+          file_name,
+          status: 'pending'
+        }
+      ])
+      .select()
+      .single();
 
-    submissions.unshift(newSubmission); // Add to beginning
-    await saveDatabase(submissions);
+    if (error) {
+      throw error;
+    }
 
     res.json({ 
       success: true,
-      id: newSubmission.id,
+      id: data.id,
       url: file_url
     });
 
   } catch (error: any) {
     console.error('Submission Error:', error);
-    res.status(500).json({ error: 'Failed to process submission', details: error.message });
+    res.status(500).json({ error: 'Failed to save submission', details: error.message });
   }
 });
 
@@ -142,8 +111,20 @@ app.get('/api/upload-token', (req, res) => {
 // Admin: List Submissions
 app.get('/api/submissions', async (req, res) => {
   try {
-    const submissions = await fetchDatabase();
-    res.json(submissions);
+    if (!supabase) {
+      return res.status(500).json({ error: 'Database not configured' });
+    }
+
+    const { data, error } = await supabase
+      .from('submissions')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    res.json(data);
   } catch (error: any) {
     console.error('Database Error:', error);
     res.status(500).json({ error: 'Failed to fetch submissions' });
@@ -153,6 +134,10 @@ app.get('/api/submissions', async (req, res) => {
 // Admin: Update Submission Status
 app.put('/api/submissions/:id', async (req, res) => {
   try {
+    if (!supabase) {
+      return res.status(500).json({ error: 'Database not configured' });
+    }
+
     const { id } = req.params;
     const { status } = req.body;
     
@@ -160,15 +145,14 @@ app.put('/api/submissions/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid status' });
     }
 
-    const submissions = await fetchDatabase();
-    const index = submissions.findIndex((sub: any) => sub.id == id);
+    const { error } = await supabase
+      .from('submissions')
+      .update({ status })
+      .eq('id', id);
 
-    if (index === -1) {
-      return res.status(404).json({ error: 'Submission not found' });
+    if (error) {
+      throw error;
     }
-
-    submissions[index].status = status;
-    await saveDatabase(submissions);
 
     res.json({ success: true });
   } catch (error: any) {
