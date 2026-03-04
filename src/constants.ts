@@ -1,35 +1,35 @@
 export const EXHIBITION_PHOTOS = [
   {
     id: 1,
-    title: "玫瑰星云",
-    photographer: "Mikazuki",
-    category: "深空摄影",
-    image: "img.naturewave.cc/static/1772633606111-4.jpg",
-    description: "这是第一次接触深空时拍摄的NGC2237玫瑰星云，效果竟然意外的不错！"
+    title: "山谷回响 (Echoes of the Valley)",
+    photographer: "陈莎拉",
+    category: "风光摄影",
+    image: "https://picsum.photos/seed/valley/800/600",
+    description: "捕捉东方被遗忘山谷的静谧光影。"
   },
   {
     id: 2,
-    title: "时空之门",
-    photographer: "唐鹤诚",
-    category: "风光摄影",
-    image: "img.naturewave.cc/static/1772634453595-星轨与林荫小道中的时空之门。星联CSVA星空摄影师唐鹤诚，2025年4月1日拍摄于大连七贤岭。尼康Z9，尼康Z14-24mmf2.8；f4.5，ISO64，单张30s.jpg",
-    description: "星轨与林荫小道中的时空之门。"
+    title: "霓虹潮汐 (Neon Tide)",
+    photographer: "马库斯·索恩",
+    category: "城市建筑",
+    image: "https://picsum.photos/seed/neon/800/1000",
+    description: "当海洋发光时，城市沉睡。赛博朋克风格的城市夜景。"
   },
   {
     id: 3,
-    title: "差异与共存",
-    photographer: "latonha",
+    title: "根 (Roots)",
+    photographer: "埃琳娜·罗德里格斯",
     category: "人文纪实",
-    image: "img.naturewave.cc/static/1772635047348-compressed_4.jpg",
-    description: "中心城区的高端化、全球化与乡野地带的原生性、迟缓性之间，构成了一种看似断裂实则彼此依存的张力。"
+    image: "https://picsum.photos/seed/roots/800/600",
+    description: "古老橡树下，记录家族与土地的深厚羁绊。"
   },
   {
     id: 4,
-    title: "从从容容",
-    photographer: "薛靖航",
-    category: "人像摄影",
-    image: "img.naturewave.cc/static/1772635464523-compressed_DSC_0074.jpg",
-    description: "在风雨中，这位藏族老乡就这样轻松自如的欣赏着美景。。"
+    title: "最后的故障 (The Last Glitch)",
+    photographer: "佐藤健二",
+    category: "观念摄影",
+    image: "https://picsum.photos/seed/glitch/800/800",
+    description: "数字噪点与现实影像的抽象拼贴。"
   }
 ];
 

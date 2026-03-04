@@ -21,6 +21,12 @@ const QINIU_SECRET_KEY = process.env.QINIU_SECRET_KEY || 'KSDc3jqQT5PKskvqHX4jje
 const QINIU_BUCKET = process.env.QINIU_BUCKET || 'nature-wave';
 const QINIU_DOMAIN = process.env.QINIU_DOMAIN || 'http://taws5nht0.hn-bkt.clouddn.com';
 
+console.log('[API] Qiniu Config:', {
+  bucket: QINIU_BUCKET,
+  domain: QINIU_DOMAIN,
+  accessKeySet: !!process.env.QINIU_ACCESS_KEY
+});
+
 // Supabase Configuration
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
