@@ -37,10 +37,10 @@ export default function SubmissionModal({ isOpen, onClose }: SubmissionModalProp
         throw new Error('请选择文件');
       }
 
-      // 1. Get Upload Token
+      // 1. Get Upload Token and Domain
       const tokenRes = await fetch('/api/upload-token');
       if (!tokenRes.ok) throw new Error('Failed to get upload token');
-      const { token } = await tokenRes.json();
+      const { token, domain } = await tokenRes.json();
 
       // 2. Upload to Qiniu
       const key = `submissions/${Date.now()}-${Math.random().toString(36).substring(2, 8)}${file.name.substring(file.name.lastIndexOf('.'))}`;
@@ -70,7 +70,10 @@ export default function SubmissionModal({ isOpen, onClose }: SubmissionModalProp
         });
       });
 
-      const fileUrl = `http://taws5nht0.hn-bkt.clouddn.com/${key}`;
+      // Use the domain returned from backend, fallback to hardcoded if missing (for safety)
+      const fileUrl = domain 
+        ? `${domain}/${key}`
+        : `http://taws5nht0.hn-bkt.clouddn.com/${key}`;
 
       // 3. Submit Metadata to Backend
       const response = await fetch('/api/submissions', {

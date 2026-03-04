@@ -67,4 +67,4 @@ export const JUDGES = [
 ];
 
 export const GALLERY_IMAGE = "https://picsum.photos/seed/gallery/800/600";
-export const HERO_BACKGROUND_IMAGE = "https://picsum.photos/seed/naturewave/1920/1080?blur=2";
+export const HERO_BACKGROUND_IMAGE = "https://images.unsplash.com/photo-1610878180933-123728745d22?q=80&w=2070&auto=format&fit=crop";

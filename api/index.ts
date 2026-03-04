@@ -121,7 +121,10 @@ app.post('/api/submissions', async (req, res) => {
 app.get('/api/upload-token', (req, res) => {
   try {
     const token = getUploadToken();
-    res.json({ token });
+    res.json({ 
+      token,
+      domain: QINIU_DOMAIN.endsWith('/') ? QINIU_DOMAIN.slice(0, -1) : QINIU_DOMAIN
+    });
   } catch (error: any) {
     console.error('Token Error:', error);
     res.status(500).json({ error: 'Failed to generate upload token' });
