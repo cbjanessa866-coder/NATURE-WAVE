@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, Send, Check } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import * as qiniu from 'qiniu-js';
 
 interface SigningModalProps {
   isOpen: boolean;
@@ -17,14 +18,67 @@ export default function SigningModal({ isOpen, onClose }: SigningModalProps) {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError('');
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      if (!formState.images || formState.images.length === 0) {
+        throw new Error('请上传作品集');
+      }
+
+      // 1. Get Upload Token
+      const tokenRes = await fetch('/api/upload-token');
+      if (!tokenRes.ok) throw new Error('Failed to get upload token');
+      const { token, domain } = await tokenRes.json();
+
+      // 2. Upload Files
+      const uploadedUrls: string[] = [];
+      
+      for (let i = 0; i < formState.images.length; i++) {
+        const file = formState.images[i];
+        const key = `applications/${Date.now()}-${Math.random().toString(36).substring(2, 8)}-${file.name}`;
+        
+        const putExtra = { fname: file.name, params: {}, mimeType: undefined };
+        const config = { useCdnDomain: true };
+        
+        const observable = qiniu.upload(file, key, token, putExtra, config);
+        
+        await new Promise((resolve, reject) => {
+          observable.subscribe({
+            next: () => {},
+            error: (err) => reject(err),
+            complete: () => resolve(null)
+          });
+        });
+
+        const fileUrl = domain 
+          ? `${domain.replace(/\/$/, '')}/${key}`
+          : `http://taws5nht0.hn-bkt.clouddn.com/${key}`;
+        
+        uploadedUrls.push(fileUrl);
+      }
+
+      // 3. Submit Application
+      const response = await fetch('/api/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formState.name,
+          contact: formState.contact,
+          description: formState.description,
+          portfolio_urls: uploadedUrls
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || '提交失败');
+      }
+
       setIsSuccess(true);
       setTimeout(() => {
         setIsSuccess(false);
@@ -36,7 +90,13 @@ export default function SigningModal({ isOpen, onClose }: SigningModalProps) {
           description: ''
         });
       }, 3000);
-    }, 1500);
+
+    } catch (err: any) {
+      console.error('Submission error:', err);
+      setError(err.message || '提交失败，请重试');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -120,6 +180,7 @@ export default function SigningModal({ isOpen, onClose }: SigningModalProps) {
                           <input
                             type="file"
                             multiple
+                            required
                             accept="image/*,.pdf"
                             onChange={(e) => setFormState({ ...formState, images: e.target.files })}
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
@@ -155,6 +216,8 @@ export default function SigningModal({ isOpen, onClose }: SigningModalProps) {
                         placeholder="https://... 或其他说明"
                       />
                     </div>
+
+                    {error && <p className="text-red-500 text-sm">{error}</p>}
 
                     <button
                       type="submit"

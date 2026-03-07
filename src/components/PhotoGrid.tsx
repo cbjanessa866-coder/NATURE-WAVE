@@ -35,7 +35,7 @@ export default function PhotoGrid() {
                 <img
                   src={photo.image}
                   alt={photo.title}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-80 group-hover:opacity-100"
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -45,7 +45,7 @@ export default function PhotoGrid() {
                 </span>
                 <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">{photo.title}</h3>
                 <p className="text-gray-300 mb-4">{photo.photographer}</p>
-                <p className="text-gray-400 text-sm line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-4 group-hover:translate-y-0">
+                <p className="text-gray-400 text-sm line-clamp-2">
                   {photo.description}
                 </p>
               </div>

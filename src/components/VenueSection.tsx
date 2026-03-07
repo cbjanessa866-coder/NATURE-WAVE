@@ -82,7 +82,7 @@ export default function VenueSection() {
                 <img 
                   src="http://img.naturewave.cc/static/1772639078173-the-yard-dalian-cultural-center-neri-and-hu-design-and-research-office_2%20(1).jpg" 
                   alt="The Yard Exterior" 
-                  className="w-full h-64 object-cover grayscale group-hover:grayscale-0 transition-all duration-700 transform group-hover:scale-110"
+                  className="w-full h-64 object-cover transition-all duration-700 transform group-hover:scale-110"
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -90,7 +90,7 @@ export default function VenueSection() {
                 <img 
                   src="http://img.naturewave.cc/static/1772638723060-the-yard-dalian-cultural-center-neri-and-hu-design-and-research-office_2.jpg" 
                   alt="The Yard Interior" 
-                  className="w-full h-48 object-cover grayscale group-hover:grayscale-0 transition-all duration-700 transform group-hover:scale-110"
+                  className="w-full h-48 object-cover transition-all duration-700 transform group-hover:scale-110"
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -100,7 +100,7 @@ export default function VenueSection() {
                 <img 
                   src="http://img.naturewave.cc/static/1772638736233-the-yard-dalian-cultural-center-neri-and-hu-design-and-research-office_13.jpg" 
                   alt="The Yard Detail" 
-                  className="w-full h-48 object-cover grayscale group-hover:grayscale-0 transition-all duration-700 transform group-hover:scale-110"
+                  className="w-full h-48 object-cover transition-all duration-700 transform group-hover:scale-110"
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -108,7 +108,7 @@ export default function VenueSection() {
                 <img 
                   src="http://img.naturewave.cc/static/1772638750008-the-yard-dalian-cultural-center-neri-and-hu-design-and-research-office_15.jpg" 
                   alt="The Yard Landscape" 
-                  className="w-full h-64 object-cover grayscale group-hover:grayscale-0 transition-all duration-700 transform group-hover:scale-110"
+                  className="w-full h-64 object-cover transition-all duration-700 transform group-hover:scale-110"
                   referrerPolicy="no-referrer"
                 />
               </div>
