@@ -109,9 +109,14 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
       });
     });
 
-    const url = QINIU_DOMAIN.endsWith('/') 
+    let url = QINIU_DOMAIN.endsWith('/') 
       ? `${QINIU_DOMAIN}${key}` 
       : `${QINIU_DOMAIN}/${key}`;
+
+    // Force HTTPS if domain is configured with HTTP
+    if (url.startsWith('http://')) {
+      url = url.replace('http://', 'https://');
+    }
 
     res.json({ url });
 
@@ -229,12 +234,17 @@ app.post('/api/applications', async (req, res) => {
     }
 
     // Check for duplicates (already approved)
-    const { data: existing } = await supabase
+    const { data: existing, error: checkError } = await supabase
       .from('photographer_applications')
       .select('id')
       .eq('contact', contact)
       .eq('status', 'approved')
-      .single();
+      .maybeSingle();
+
+    if (checkError) {
+      console.error('[API] Check duplicate error:', checkError);
+      // Continue execution, don't block
+    }
 
     if (existing) {
       return res.status(400).json({ error: '该联系方式已是签约摄影师，请勿重复申请。' });
@@ -255,7 +265,13 @@ app.post('/api/applications', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[API] Insert application error:', error);
+      if (error.code === '42P01') { // undefined_table
+        throw new Error('Database table "photographer_applications" does not exist. Please create it in Supabase.');
+      }
+      throw error;
+    }
 
     res.json({ success: true, id: data.id });
 
