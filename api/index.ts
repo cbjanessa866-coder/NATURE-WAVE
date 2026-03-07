@@ -89,7 +89,8 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     
     const config = new qiniu.conf.Config();
     // @ts-ignore
-    config.zone = qiniu.zone.Zone_z0;
+    // Set zone to null to let the SDK auto-detect the zone based on the bucket
+    config.zone = null;
     
     const formUploader = new qiniu.form_up.FormUploader(config);
     const putExtra = new qiniu.form_up.PutExtra();
@@ -97,10 +98,12 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     await new Promise((resolve, reject) => {
       formUploader.put(uploadToken, key, file.buffer, putExtra, (respErr, respBody, respInfo) => {
         if (respErr) {
+          console.error('[API] Qiniu Upload Error (Network/SDK):', respErr);
           reject(respErr);
         } else if (respInfo.statusCode == 200) {
           resolve(respBody);
         } else {
+          console.error('[API] Qiniu Upload Failed (Status):', respInfo.statusCode, respBody);
           reject(new Error(`Qiniu upload failed: ${respInfo.statusCode}`));
         }
       });
@@ -191,7 +194,7 @@ async function uploadJsonToQiniu(key: string, jsonData: any) {
   
   const config = new qiniu.conf.Config();
   // @ts-ignore
-  config.zone = qiniu.zone.Zone_z0; // Default zone, might need adjustment based on bucket region
+  config.zone = null; // Auto-detect zone
   
   const formUploader = new qiniu.form_up.FormUploader(config);
   const putExtra = new qiniu.form_up.PutExtra();
