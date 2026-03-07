@@ -126,28 +126,20 @@ export default function AdminDashboard() {
     if (!uploadFile) return;
     setIsUploading(true);
     try {
-      const tokenRes = await fetch('/api/upload-token');
-      if (!tokenRes.ok) throw new Error('Failed to get upload token');
-      const { token, domain } = await tokenRes.json();
+      const formData = new FormData();
+      formData.append('file', uploadFile);
 
-      const key = `static/${Date.now()}-${uploadFile.name}`;
-      const putExtra = { fname: uploadFile.name, params: {}, mimeType: undefined };
-      const config = { useCdnDomain: true };
-
-      const observable = qiniu.upload(uploadFile, key, token, putExtra, config);
-
-      await new Promise((resolve, reject) => {
-        observable.subscribe({
-          next: () => {},
-          error: (err) => reject(err),
-          complete: (res) => resolve(res)
-        });
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
       });
 
-      const url = domain 
-        ? `${domain.replace(/\/$/, '')}/${key}`
-        : `http://taws5nht0.hn-bkt.clouddn.com/${key}`;
-      
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || '上传失败');
+      }
+
+      const { url } = await response.json();
       setUploadedUrl(url);
       setUploadFile(null);
     } catch (err: any) {

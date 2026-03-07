@@ -2,7 +2,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, Send, Check } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import * as qiniu from 'qiniu-js';
 
 interface SigningModalProps {
   isOpen: boolean;
@@ -30,39 +29,29 @@ export default function SigningModal({ isOpen, onClose }: SigningModalProps) {
         throw new Error('请上传作品集');
       }
 
-      // 1. Get Upload Token
-      const tokenRes = await fetch('/api/upload-token');
-      if (!tokenRes.ok) throw new Error('Failed to get upload token');
-      const { token, domain } = await tokenRes.json();
-
-      // 2. Upload Files
+      // 1. Upload Files via Server Proxy
       const uploadedUrls: string[] = [];
       
       for (let i = 0; i < formState.images.length; i++) {
         const file = formState.images[i];
-        const key = `applications/${Date.now()}-${Math.random().toString(36).substring(2, 8)}-${file.name}`;
-        
-        const putExtra = { fname: file.name, params: {}, mimeType: undefined };
-        const config = { useCdnDomain: true };
-        
-        const observable = qiniu.upload(file, key, token, putExtra, config);
-        
-        await new Promise((resolve, reject) => {
-          observable.subscribe({
-            next: () => {},
-            error: (err) => reject(err),
-            complete: () => resolve(null)
-          });
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
         });
 
-        const fileUrl = domain 
-          ? `${domain.replace(/\/$/, '')}/${key}`
-          : `http://taws5nht0.hn-bkt.clouddn.com/${key}`;
-        
-        uploadedUrls.push(fileUrl);
+        if (!uploadRes.ok) {
+          const errData = await uploadRes.json().catch(() => ({}));
+          throw new Error(errData.error || `文件 ${file.name} 上传失败`);
+        }
+
+        const { url } = await uploadRes.json();
+        uploadedUrls.push(url);
       }
 
-      // 3. Submit Application
+      // 2. Submit Application
       const response = await fetch('/api/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

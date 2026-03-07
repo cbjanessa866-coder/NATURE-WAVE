@@ -67,6 +67,57 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', storage: 'supabase' });
 });
 
+// ... existing imports
+
+// Generic Upload Endpoint (Proxy to Qiniu)
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  console.log('[API] POST /api/upload');
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const file = req.file;
+    // Sanitize filename to avoid encoding issues
+    const safeFilename = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const key = `uploads/${Date.now()}-${Math.random().toString(36).substring(2, 8)}-${safeFilename}`;
+    
+    // Upload to Qiniu using Node.js SDK
+    const mac = new qiniu.auth.digest.Mac(QINIU_ACCESS_KEY, QINIU_SECRET_KEY);
+    const putPolicy = new qiniu.rs.PutPolicy({ scope: QINIU_BUCKET });
+    const uploadToken = putPolicy.uploadToken(mac);
+    
+    const config = new qiniu.conf.Config();
+    // @ts-ignore
+    config.zone = qiniu.zone.Zone_z0;
+    
+    const formUploader = new qiniu.form_up.FormUploader(config);
+    const putExtra = new qiniu.form_up.PutExtra();
+    
+    await new Promise((resolve, reject) => {
+      formUploader.put(uploadToken, key, file.buffer, putExtra, (respErr, respBody, respInfo) => {
+        if (respErr) {
+          reject(respErr);
+        } else if (respInfo.statusCode == 200) {
+          resolve(respBody);
+        } else {
+          reject(new Error(`Qiniu upload failed: ${respInfo.statusCode}`));
+        }
+      });
+    });
+
+    const url = QINIU_DOMAIN.endsWith('/') 
+      ? `${QINIU_DOMAIN}${key}` 
+      : `${QINIU_DOMAIN}/${key}`;
+
+    res.json({ url });
+
+  } catch (error: any) {
+    console.error('Upload Error:', error);
+    res.status(500).json({ error: 'Upload failed', details: error.message });
+  }
+});
+
 // Submission Endpoint (Save Metadata to Supabase)
 app.post('/api/submissions', async (req, res) => {
   console.log('[API] POST /api/submissions');
